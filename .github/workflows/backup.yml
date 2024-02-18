@@ -1,51 +1,50 @@
-name: Backup Bangumi Data
+name: Backup Bangumi Data  # 工作流程名称
 
 on:
-  # 注释：如果要定时执行，请解除以下部分的注释（删除掉行首的 # 即可）
-  # ----- 解除这行之后的注释（不包括这行）-----
-   schedule:
-     - cron: "0 4 * * 1"  # 运行时间：每周一凌晨四点
-  # ----- 解除这行之前的注释（不包括这行）-----
+  # 触发条件设置：手动触发和定时触发
   workflow_dispatch:  # 也支持手动触发
+  # 定时触发设置为每周一凌晨四点
+  schedule:
+    - cron: "0 4 * * 1"
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # 在最新版本的 Ubuntu 环境中运行
 
     steps:
-      - name: Checkout code
+      - name: Checkout code  # 步骤：检出代码
         uses: actions/checkout@v3
 
-      - name: Set up Python
+      - name: Set up Python  # 步骤：设置 Python 环境
         uses: actions/setup-python@v3
         with:
           python-version: 3.8
 
-      - name: Install dependencies
+      - name: Install dependencies  # 步骤：安装项目依赖
         run: pip install -r requirements.txt
 
-      - name: Download and extract archive data
+      - name: Download and extract archive data  # 步骤：下载并解压数据存档
         run: |
           wget $(python utils.py) -O dump.zip --quiet
           unzip dump.zip
 
-      - name: Set up environment variables
+      - name: Set up environment variables  # 步骤：设置环境变量
         run: echo "BANGUMI_ACCESS_TOKEN=${{ secrets.BANGUMI_ACCESS_TOKEN }}" >> $GITHUB_ENV
 
-      - name: (Step 1) Fetch
+      - name: (Step 1) Fetch  # 步骤：获取数据
         run: python fetch.py
 
-      - name: (Step 2) Build HTML
+      - name: (Step 2) Build HTML  # 步骤：生成 HTML 格式的数据
         run: python generate_html.py
       
-      - name: (Step 3) Build CSV
+      - name: (Step 3) Build CSV  # 步骤：生成 CSV 格式的数据
         run: python generate_csv.py
 
-      - name: Upload output file
+      - name: Upload output file  # 步骤：上传输出文件为工件
         uses: actions/upload-artifact@v3
         with:
-          name: Output
-          path: |
+          name: Output  # 工件名称
+          path: |  # 要上传的文件路径
             takeout.json
             takeout.html
-            takeout*.csv
+            takeout*.csv  # 通配符匹配多个文件
